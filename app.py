@@ -9,9 +9,8 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-
 def make_serializable(obj):
-    """ Recursively convert non-serializable elements (e.g., numpy data types) to Python native types """
+    """Recursively convert non-serializable elements (e.g., numpy data types) to Python native types."""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, np.generic):
@@ -21,7 +20,6 @@ def make_serializable(obj):
     elif isinstance(obj, list):
         return [make_serializable(i) for i in obj]
     return obj
-
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -34,23 +32,20 @@ def analyze():
     results = []
 
     for img_str in images_base64:
-        # Remove the "data:image/jpeg;base64," prefix if present
-        img_data = img_str.split(",")[1]
-
-        # Decode the base64 string to bytes
-        img_bytes = base64.b64decode(img_data)
-
-        # Open the image with PIL and convert to RGB
-        img = Image.open(BytesIO(img_bytes)).convert('RGB')
-
-        # Convert the PIL image to a NumPy array
-        img_np = np.array(img)
-
         try:
-            # Analyze the image using DeepFace
-            demography = DeepFace.analyze(img_np)  # Pass the NumPy array to DeepFace
+            img_data = img_str.split(",")[1]
 
-            # Convert the analysis result to JSON serializable format
+
+            img_bytes = base64.b64decode(img_data)
+
+            img = Image.open(BytesIO(img_bytes)).convert('RGB')
+
+
+            img_np = np.array(img)
+
+
+            demography = DeepFace.analyze(img_np)
+
             serializable_result = make_serializable(demography)
             results.append(serializable_result)
         except Exception as e:
@@ -58,6 +53,3 @@ def analyze():
 
     return jsonify(results)
 
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
