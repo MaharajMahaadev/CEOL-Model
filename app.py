@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://ceol.vercel.app/"])
 
 def make_serializable(obj):
     """Recursively convert non-serializable elements (e.g., numpy data types) to Python native types."""
