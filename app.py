@@ -21,8 +21,22 @@ def make_serializable(obj):
         return [make_serializable(i) for i in obj]
     return obj
 
-@app.route('/analyze', methods=['POST'])
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app/"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+@app.route('/analyze', methods=['OPTIONS','POST'])
 def analyze():
+    if request.method == 'OPTIONS':
+        response = make_response('', 204)
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return response
+        
     data = request.json
     images_base64 = data.get("img", [])
 
