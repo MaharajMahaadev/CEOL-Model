@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_reponse
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from deepface import DeepFace
 import base64
