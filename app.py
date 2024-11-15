@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 
 app = Flask(__name__)
-CORS(app, origins=["https://ceol.vercel.app/"])
+CORS(app, origins=["https://ceol.vercel.app"])
 
 def make_serializable(obj):
     """Recursively convert non-serializable elements (e.g., numpy data types) to Python native types."""
@@ -23,7 +23,7 @@ def make_serializable(obj):
 
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app/"
+    response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
@@ -32,7 +32,7 @@ def add_cors_headers(response):
 def analyze():
     if request.method == 'OPTIONS':
         response = make_response('', 204)
-        response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app"
         response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
