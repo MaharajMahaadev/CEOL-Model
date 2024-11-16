@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import base64
 from io import BytesIO
@@ -7,7 +7,8 @@ import tensorflow as tf
 from keras.models import load_model
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://ceol.vercel.app"])
+
 
 def emotion_analysis(emotions):
     objects = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
@@ -28,8 +29,22 @@ def make_serializable(obj):
         return [make_serializable(i) for i in obj]
     return obj
 
-@app.route('/analyze', methods=['POST'])
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+@app.route('/analyze', methods=['OPTIONS','POST'])
 def analyze():
+    if request.method == 'OPTIONS':
+        response = make_response('', 204)
+        response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return response
+        
     data = request.json
     images_base64 = data.get("img", [])
 
