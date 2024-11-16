@@ -1,13 +1,20 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from deepface import DeepFace
 import base64
 from io import BytesIO
-from PIL import Image
 import numpy as np
+import tensorflow as tf
+from keras.models import load_model
 
 app = Flask(__name__)
-CORS(app, origins=["https://ceol.vercel.app"])
+CORS(app)
+
+def emotion_analysis(emotions):
+    objects = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+    y_pos = np.arange(len(objects))
+
+objects = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
+model = load_model('model.h5')
 
 def make_serializable(obj):
     """Recursively convert non-serializable elements (e.g., numpy data types) to Python native types."""
@@ -21,22 +28,8 @@ def make_serializable(obj):
         return [make_serializable(i) for i in obj]
     return obj
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return response
-
-@app.route('/analyze', methods=['OPTIONS','POST'])
+@app.route('/analyze', methods=['POST'])
 def analyze():
-    if request.method == 'OPTIONS':
-        response = make_response('', 204)
-        response.headers["Access-Control-Allow-Origin"] = "https://ceol.vercel.app"
-        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        return response
-        
     data = request.json
     images_base64 = data.get("img", [])
 
@@ -49,21 +42,32 @@ def analyze():
         try:
             img_data = img_str.split(",")[1]
 
-
             img_bytes = base64.b64decode(img_data)
 
-            img = Image.open(BytesIO(img_bytes)).convert('RGB')
+            img_temp = BytesIO(img_bytes)
 
+            img = tf.keras.utils.load_img(img_temp, color_mode="grayscale", target_size=(48, 48))
+            x = tf.keras.utils.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
 
-            img_np = np.array(img)
+            x /= 255
 
+            custom = model.predict(x)
+            emotion_analysis(custom[0])
 
-            demography = DeepFace.analyze(img_np)
+            x = np.array(x, 'float32')
+            x = x.reshape([48, 48]);
 
-            serializable_result = make_serializable(demography)
+            m = 0.000000000000000000001
+            a = custom[0]
+            for i in range(0, len(a)):
+                if a[i] > m:
+                    m = a[i]
+                    ind = i
+
+            serializable_result = make_serializable(objects[ind])
             results.append(serializable_result)
         except Exception as e:
             results.append({"error": str(e)})
 
     return jsonify(results)
-
